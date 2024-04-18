@@ -182,7 +182,7 @@ for(j in unique(land_export$COD_FAO)){
         occ$EARTE[i],",",
         ifelse(occ$zona[i] == '27.10',"SubArea,","AreaUnit,"),
         occ$zona[i],",",
-        "NA,","NA,","-9,","NA",
+        "NA,","NA,",effort,"NA",
         "\n",
         "SI,","PT,",ano,",","Month,",
         occ$IMES[i],",",
