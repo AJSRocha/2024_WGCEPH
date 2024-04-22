@@ -31,8 +31,8 @@ fao = c('COM','IIL','SQC','OCT','OMZ','CTC',
 
 
 
-## 2023
-ano = 2014
+## 2014
+ano = 2011
 
 assign(paste0('l_',ano),
 land %>% 
@@ -70,26 +70,14 @@ ggplot(get(paste0('teste_',ano)),
 
 
 
-
-
-
-
-
-ddlibrary(dplyr)
-source('C://repos/path.R'); path('local')
-
 ano = 2022
 
 
 
 
-
-
-
-
 # Importa dados
-land = read.csv(paste0(dados, 'desembarques//desemb_2022.csv'),
-               sep = ",", dec = ".")
+# land = read.csv(paste0(dados, 'desembarques//desemb_2022.csv'),
+#                sep = ",", dec = ".")
 
 # load("C:/dados_pnab/vendas-dia/vd_2022.Rdata")
 
@@ -118,9 +106,9 @@ portos[182,] = c(40950, "CAIS DO BICO", "csbic", "NW","AVEIRO", "PTCDB", "CDB",N
 #              by.x = 'IESPECIE',
 #              by.y ="ESPECIE_SLV")
 
-land = merge(land,slv[,c("IESPECIE","CODFAO","COD_FAMILIA")],all.x=T,all.y=F,
-             by.x = 'IESPECIE',
-             by.y ="IESPECIE")
+# land = merge(land,slv[,c("IESPECIE","CODFAO","COD_FAMILIA")],all.x=T,all.y=F,
+#              by.x = 'IESPECIE',
+#              by.y ="IESPECIE")
 
 
 # acrescenta portos slv
@@ -161,6 +149,21 @@ land %>%
   # desembarques à zona, em kg
   summarise(QESTIMADA = sum(QESTIMADA, na.rm = T)) %>% 
   filter(zona != 'O')
+
+
+land_export =
+  get(paste0('vd_', ano)) %>% 
+  mutate(EESPECIE = case_when(EESPECIE %in% fao ~ EESPECIE,
+                              T ~ 'OTH')) %>% 
+  group_by(year_sale, zona, EESPECIE, month_sale, EGRUPART) %>% 
+  summarise(QVENDA = sum(QVENDA))
+
+effort = 
+  get(paste0('vd_', ano)) %>% 
+  group_by(year_sale, zona, month_sale, EGRUPART, PORTO, IDATVEND, IEMBARCA) %>% 
+  summarise(kw_day = unique(Power.Main))
+
+
 
 # land_export = land %>% filter(COD_FAO %in% fao)
 

@@ -14,11 +14,31 @@ source('C://repos/path.R'); path('local')
 # dados = 'C:/PNAB/'
 ```
 
+As queries:
+
+```{sql, eval = F}
+select * from master."DIARIOS_PESCA_E" dpe 
+where dpe."IANO" = 2023
+
+select * from master."DIARIOS_PESCA_P" dpp 
+where dpp."YEAR" = 2023
+```
+
+
 ```{r}
-dpe2022 = read.csv(paste0(dados,'logbooks/dpe2022.csv'))
+dpe2023 = read.csv(paste0(dados,'logbooks/_DIARIOS_PESCA_E__202404191148.csv'))
 # load(paste0(dados,'logbooks/dpe2021_correct.RData'))
 # load("C:/PNAB/fleet_register/fleet.Rdata") # casa
-load("C:/dados_pnab/fleet_register/fleet.Rdata")
+
+# Correccoes óbvias porque os pescadores são azelhas
+dpe2023[dpe2023$LANCE_NUM == '3093424',]$DATAHORA_INICIO = '01-10-2023 00:15'
+dpe2023[dpe2023$LANCE_NUM == '3057037',]$DATAHORA_INICIO = '20-11-2023 01:31'
+dpe2023[dpe2023$LANCE_NUM == '3117233',]$DATAHORA_INICIO = '31-10-2023 23:30'
+dpe2023[dpe2023$LANCE_NUM == '2925359',]$DATAHORA_INICIO = '13-03-2023 23:40'
+dpe2023[dpe2023$LANCE_NUM == '2944591',] %>% View
+
+
+load("Z:/PNAB/fleet_register/fleet.Rdata")
 # fleet = read.csv(paste0(dados,'fleet_register/vesselRegistryListResults.csv'),
 #                   sep = ";",
 #                   dec = '.',
@@ -32,7 +52,6 @@ load("C:/dados_pnab/fleet_register/fleet.Rdata")
 #   mutate(Event.Start.Date = as.POSIXct(Event.Start.Date, format = '%Y-%m-%d'),
 #          Event.End.Date = as.POSIXct(Event.End.Date, format = '%Y-%m-%d'))
 
-df = dpe2022
 ```
 
 # Checks realizados:
@@ -55,11 +74,11 @@ df = dpe2022
 
 ```{r}
 # muda formato da departude data por causa da compatibilidade com SQLite
-df = df %>%
-  mutate(DATAHORA_INICIO = as.POSIXct(DATAHORA_INICIO, format = '%Y-%m-%d %H:%M:%S'),
-         DATAHORA_FIM = as.POSIXct(DATAHORA_FIM, format = '%Y-%m-%d %H:%M:%S'),
-         DEPARTURE_DATAHORA = as.POSIXct(DEPARTURE_DATAHORA, format = '%Y-%m-%d %H:%M:%S'),
-         RETURN_DATAHORA = as.POSIXct(RETURN_DATAHORA, format = '%Y-%m-%d %H:%M:%S'),
+df = dpe2023 %>%
+  mutate(DATAHORA_INICIO = as.POSIXct(DATAHORA_INICIO, format = '%d-%m-%Y %H:%M', tz = "UTC", locale = "C"),
+         DATAHORA_FIM = as.POSIXct(DATAHORA_FIM, format = '%d-%m-%Y %H:%M', tz = "UTC", locale = "C"),
+         DEPARTURE_DATAHORA = as.POSIXct(DEPARTURE_DATAHORA, format = '%d-%m-%Y %H:%M', tz = "UTC", locale = "C"),
+         RETURN_DATAHORA = as.POSIXct(RETURN_DATAHORA, format = '%d-%m-%Y %H:%M', tz = "UTC", locale = "C"),
          data_ref = lubridate::round_date(DATAHORA_INICIO, unit = 'day'),
          REGIAO_INICIO_EFETIVA = case_when(REGIAO_INICIO_EFETIVA == '27.9.a' ~ '27.9.a',
                                             REGIAO_INICIO_EFETIVA %in% c('27.10.a.1', '27.10.a.2', '27.10.b') ~ '27.10',
@@ -67,7 +86,8 @@ df = df %>%
          REGIAO_FIM_EFETIVA = case_when(REGIAO_FIM_EFETIVA == '27.9.a' ~ '27.9.a',
                                             REGIAO_FIM_EFETIVA %in% c('27.10.a.1', '27.10.a.2', '27.10.b') ~ '27.10',
                                             T ~ 'O')
-         )
+         ) %>% 
+  filter(DATAHORA_INICIO >= DEPARTURE_DATAHORA & DATAHORA_FIM <= RETURN_DATAHORA)
 
 temp =  
  sqldf::sqldf(
@@ -79,7 +99,7 @@ temp =
 
 # Checks
 summary(factor(temp$Power.Main))
-temp[is.na(temp$Power.of.main.engine),] %>% View
+temp[is.na(temp$Power.Main),] %>% View
 
 # lista de especies de interesse,  tirada da query dos desembarques
 fao = c('COM','IIL','SQC','OCT','OMZ',
@@ -137,7 +157,8 @@ temp_1 =
    rbind(., temp_0) %>%
    # anonimiza
    mutate(IEMBARCA = factor(IEMBARCA),
-          IEMBARCA = paste(substr(IEMBARCA,1,3), as.numeric(IEMBARCA), sep = ""))
+          IEMBARCA = paste(substr(IEMBARCA,1,3), as.numeric(IEMBARCA), sep = ""))  %>% 
+  filter(effort >=0)
 
 write.csv(temp_1, file = 'ceph_catch_effort_PT.csv')
 
@@ -202,7 +223,8 @@ temp_3 =
              effort,
              RECT_ESTAT_FIM_EFETIVO,
              ESPECIE_CODFAO,
-             CAPTURA_KG)
+             CAPTURA_KG) %>% 
+  filter(effort >=0)
 
 
 
