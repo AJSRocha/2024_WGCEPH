@@ -152,6 +152,8 @@ eff = reshape2::melt(eff, id = c('metier', 'zona', 'year'))
 names(eff) = c('metier', 'zona', 'year', 'mes', 'effort')
 eff$mes = as.numeric(as.character(eff$mes))
 
+# usado apenas em 2024 enquanto nao ha dados
+eff$effort = NA
 
 # Importa dados
 # land = read.csv(paste0(dados, 'desembarques//desemb_2022.csv'),
@@ -258,8 +260,8 @@ land_export$zona = as.character(land_export$zona)
 
 
 #corrido temporariamente enquanto nao mandaram dataset completo do esforço
-land_export = land_export %>% 
-  filter(EARTE == 'OTB')
+# land_export = land_export %>% 
+#   filter(EARTE == 'OTB')
 
 #cria ficheiro IC
 for(j in unique(land_export$CODFAO)){
