@@ -153,7 +153,7 @@ names(eff) = c('metier', 'zona', 'year', 'mes', 'effort')
 eff$mes = as.numeric(as.character(eff$mes))
 
 # usado apenas em 2024 enquanto nao ha dados
-eff$effort = NA
+eff$effort = "NA"
 
 # Importa dados
 # land = read.csv(paste0(dados, 'desembarques//desemb_2022.csv'),
@@ -275,10 +275,7 @@ for(j in unique(land_export$CODFAO)){
         occ$EARTE[i],",",
         ifelse(occ$zona[i] == '27.10',"SubArea,","AreaUnit,"),
         occ$zona[i],",",
-        "NA,","NA,",eff[eff$metier==occ$EARTE[i] &
-                          eff$mes == occ$IMES[i] &
-                          eff$zona == occ$zona[i] &
-                          eff$year == ano,]$effort,",kWd",
+        "NA,","kWd,","-9",",NA", #variavel do esforco entra no '-9'
         "\n",
         "SI,","PT,",ano,",","Month,",
         occ$IMES[i],",",
