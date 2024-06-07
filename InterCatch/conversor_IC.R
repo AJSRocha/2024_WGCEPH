@@ -208,7 +208,10 @@ fao = c("SQC","OCT","OMZ","CTC",
         "CTL","TDQ","EDT","SQA",
         "OJJ","SQL","CTR","SQU")
 
-ano = 2023
+land_acores = readxl::read_xlsx('intercatch/2023_27.10.a.2_Landings Quantity.xlsx')
+
+
+ano = 2022
 
 # transforma tabela
 land_export =
